@@ -1,0 +1,113 @@
+name: continuous integration, continuous delivery and continuous deployment
+
+on:
+ 
+  push:
+    branches: [ cos-92-microservice-trial ]
+
+  pull_request:
+    branches: [ master ]
+
+env:
+ IMAGE_TAG: ${{ github.run_id }}
+
+jobs:
+  
+  build_release:
+    
+    name: continuous integration,continuous delivery and deployment
+    runs-on: ubuntu-latest
+
+   
+    steps:
+
+    - name: Check out code
+      uses: actions/checkout@v2
+    
+
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v1
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: eu-west-3
+
+
+    - name: Login to Amazon ECR
+      id: login-ecr
+      uses: aws-actions/amazon-ecr-login@v1
+
+
+    - name: Build, tag, and push image to Amazon ECR for micro-server
+      env:
+        ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        ECR_REPOSITORY: micro-server-dev
+      run: |
+        docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG micro-server
+        docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+
+
+
+
+    - name: Build, tag, and push image to Amazon ECR for micro-client
+      env:
+        ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        ECR_REPOSITORY: micro-client-dev
+      run: |
+        docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG micro-client
+        docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+    
+
+
+    - name: copy docker-compose.yaml via ssh key from github to remote EC2 instance
+      uses: nogsantos/scp-deploy@master
+      with:
+        src: docker-compose.yaml
+        host: ${{ secrets.HOSTNAME }}
+        remote: /home/ec2-user
+        port: 22
+        user: ${{ secrets.USERNAME }}
+        key: ${{ secrets.SSH_KEY }}
+
+
+
+    - name: deploy on EC2
+      uses: appleboy/ssh-action@v0.1.6
+      env:
+         IMAGE_TAG: ${{ github.run_id }}
+      with:
+        host: ${{ secrets.HOSTNAME }}
+        username: ${{ secrets.USERNAME }}
+        key: ${{ secrets.SSH_KEY }}
+        port: 22
+        envs: IMAGE_TAG
+        script: |
+          export IMAGE_TAG=$IMAGE_TAG
+          docker-compose down
+          docker-compose up -d
+
+
+
+
+    # - name: Update Minor version
+    #   uses: hmanzur/actions-set-secret@v2.0.0
+    #   with:
+    #     name: 'MINOR'
+    #     value: $((${{ secrets.MINOR }}+1))
+    #     repository: Cosme-code
+    #     token: ${{ secrets.REPO_ACCESS_TOKEN }}
+    #     org: true
+    #     visibility: 'all'
+
+
+    # - name: Update Major version
+    #   uses: hmanzur/actions-set-secret@v2.0.0
+    #   with:
+    #     name: 'MINOR'
+    #     value: $((${{ secrets.MAJOR }}+1))
+    #     repository: Cosme-code
+    #     token: ${{ secrets.REPO_ACCESS_TOKEN }}
+    #     org: true
+    #     visibility: 'all'
+
+

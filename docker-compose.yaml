@@ -1,0 +1,90 @@
+version: "2"
+services:
+######################################################################
+##                kafka-service, zookeeper and kafkadrop web app
+
+  kafdrop:
+    image: obsidiandynamics/kafdrop
+    container_name: kafka-web
+    restart: "no"
+    ports:
+      - "9000:9000"
+    environment:
+      KAFKA_BROKERCONNECT: "kafka:9092"
+      JVM_OPTS: "-Xms16M -Xmx48M -Xss180K -XX:-TieredCompilation -XX:+UseStringDeduplication -noverify"
+    depends_on:
+      - "kafka"
+    networks:
+        - nesjs-network
+
+  zookeeper:
+    image: 'docker.io/bitnami/zookeeper:3-debian-10'
+    container_name: zookeeper
+    ports:
+      - 2181:2181
+    environment:
+      - ALLOW_ANONYMOUS_LOGIN=yes
+    networks:
+      - nesjs-network
+
+  kafka:
+    image: 'docker.io/bitnami/kafka:2-debian-10'
+    container_name: kafka
+    ports:
+      - 9092:9092
+      - 9093:9093
+    environment:
+      - KAFKA_CFG_ZOOKEEPER_CONNECT=zookeeper:2181
+      - ALLOW_PLAINTEXT_LISTENER=yes
+      - KAFKA_CFG_AUTO_CREATE_TOPICS_ENABLE=true
+      - KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP=CLIENT:PLAINTEXT,EXTERNAL:PLAINTEXT
+      - KAFKA_CFG_LISTENERS=CLIENT://:9092,EXTERNAL://:9093
+      - KAFKA_CFG_ADVERTISED_LISTENERS=CLIENT://kafka:9092,EXTERNAL://kafka:9093
+      - KAFKA_INTER_BROKER_LISTENER_NAME=CLIENT
+    depends_on:
+      - zookeeper
+    networks:
+      - nesjs-network
+###################################################################
+##               development-deployment, server and client services
+
+#   micro-server-dev:
+#       container_name: micro-server-dev
+#       image: 066853328932.dkr.ecr.eu-west-3.amazonaws.com/micro-server-dev:${IMAGE_TAG}
+#       command: npm run start:dev
+#       ports:
+#           - 3000:3000
+#       networks:
+#           - nesjs-network
+#       volumes:
+#           - /usr/src/app/node_modules
+#       restart: unless-stopped
+#       working_dir: /usr/src/app
+#       environment:
+#         NODE_ENV: development
+#       depends_on:
+#         - kafka
+
+#   micro-client-dev:
+#       container_name: micro-client-dev
+#       image: 066853328932.dkr.ecr.eu-west-3.amazonaws.com/micro-client-dev:${IMAGE_TAG}
+      
+#       command: npm run start:dev
+#       ports:
+#           - 3060:3060
+#       networks:
+#           - nesjs-network
+#       volumes:
+#           - /usr/src/app/node_modules
+#       restart: unless-stopped
+#       working_dir: /usr/src/app
+#       depends_on:
+#         - micro-server-dev
+#         - kafka
+#       environment:
+#         NODE_ENV: development     
+
+# networks:
+#   nesjs-network:
+#     driver: bridge
+
