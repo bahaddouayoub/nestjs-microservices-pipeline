@@ -48,43 +48,43 @@ services:
 ###################################################################
 ##               development-deployment, server and client services
 
-#   micro-server-dev:
-#       container_name: micro-server-dev
-#       image: 066853328932.dkr.ecr.eu-west-3.amazonaws.com/micro-server-dev:${IMAGE_TAG}
-#       command: npm run start:dev
-#       ports:
-#           - 3000:3000
-#       networks:
-#           - nesjs-network
-#       volumes:
-#           - /usr/src/app/node_modules
-#       restart: unless-stopped
-#       working_dir: /usr/src/app
-#       environment:
-#         NODE_ENV: development
-#       depends_on:
-#         - kafka
+  micro-server-dev:
+      container_name: micro-server-dev
+      image: 066853328932.dkr.ecr.eu-west-3.amazonaws.com/micro-server-dev:${IMAGE_TAG}
+      command: npm run start:dev
+      ports:
+          - 3000:3000
+      networks:
+          - nesjs-network
+      volumes:
+          - /usr/src/app/node_modules
+      restart: unless-stopped
+      working_dir: /usr/src/app
+      environment:
+        NODE_ENV: development
+      depends_on:
+        - kafka
 
-#   micro-client-dev:
-#       container_name: micro-client-dev
-#       image: 066853328932.dkr.ecr.eu-west-3.amazonaws.com/micro-client-dev:${IMAGE_TAG}
+  micro-client-dev:
+      container_name: micro-client-dev
+      image: 066853328932.dkr.ecr.eu-west-3.amazonaws.com/micro-client-dev:${IMAGE_TAG}
       
-#       command: npm run start:dev
-#       ports:
-#           - 3060:3060
-#       networks:
-#           - nesjs-network
-#       volumes:
-#           - /usr/src/app/node_modules
-#       restart: unless-stopped
-#       working_dir: /usr/src/app
-#       depends_on:
-#         - micro-server-dev
-#         - kafka
-#       environment:
-#         NODE_ENV: development     
+      command: npm run start:dev
+      ports:
+          - 3060:3060
+      networks:
+          - nesjs-network
+      volumes:
+          - /usr/src/app/node_modules
+      restart: unless-stopped
+      working_dir: /usr/src/app
+      depends_on:
+        - micro-server-dev
+        - kafka
+      environment:
+        NODE_ENV: development     
 
-# networks:
-#   nesjs-network:
-#     driver: bridge
+networks:
+  nesjs-network:
+    driver: bridge
 
