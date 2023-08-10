@@ -1,9 +1,11 @@
 name: continuous integration, continuous delivery and continuous deployment
 
 on:
+
+  workflow_dispatch:
  
   push:
-    branches: [ cos-92-microservice-trial ]
+    branches: [ master ]
 
   pull_request:
     branches: [ master ]
