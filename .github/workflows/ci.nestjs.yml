@@ -3,6 +3,17 @@ name: continuous integration, continuous delivery and continuous deployment
 on:
 
   workflow_dispatch:
+    inputs:
+      environment:
+        description: 'The steps to deploy to'
+        required: true
+        default: 'build-account'
+        type: choice
+        options:
+          - build-querybuilder
+          - build-storage
+          - build-gateway
+          - build-account
  
   push:
     branches: [ master ]
